@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Don't crawl admin panel
+Disallow: /admin
+
+# Don't crawl API routes
+Disallow: /api/
+
+Sitemap: https://yourproject.vercel.app/sitemap.xml

@@ -1,0 +1,62 @@
+# docker-compose.yml — Local development stack
+# Run: docker-compose up -d
+# This starts PostgreSQL and the backend API
+
+version: '3.9'
+
+services:
+  # ── PostgreSQL Database ─────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: pulsenews-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pulsenews
+      POSTGRES_USER: pulsenews_user
+      POSTGRES_PASSWORD: pulsenews_local_password
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U pulsenews_user -d pulsenews']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend API ────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pulsenews-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      DATABASE_URL: postgresql://pulsenews_user:pulsenews_local_password@postgres:5432/pulsenews
+      JWT_SECRET: dev_jwt_secret_replace_in_production_minimum_64_chars_long_abcdef
+      JWT_REFRESH_SECRET: dev_refresh_secret_replace_in_production_minimum_64_chars_long_xyz
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      COOKIE_SECRET: dev_cookie_secret_replace_in_production
+      ALLOWED_ORIGINS: http://localhost:3000
+      FRONTEND_URL: http://localhost:3000
+      # Add your Cloudinary credentials:
+      CLOUDINARY_CLOUD_NAME: your_cloud_name
+      CLOUDINARY_API_KEY: your_api_key
+      CLOUDINARY_API_SECRET: your_api_secret
+    ports:
+      - '5000:5000'
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - /app/dist
+    command: npm run dev
+
+volumes:
+  postgres_data:
+    driver: local
