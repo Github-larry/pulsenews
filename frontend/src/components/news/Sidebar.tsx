@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Flame, BarChart2, Tag, TrendingUp } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Post } from '@/types';
-import { formatCount, timeAgo, getCategoryColor } from '@/lib/utils';
+import { formatCount, timeAgo } from '@/lib/utils';
 import { Skeleton } from '@/components/ui';
 import { useAuthStore } from '@/store/authStore';
 

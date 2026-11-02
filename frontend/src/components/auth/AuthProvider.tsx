@@ -1,50 +1,58 @@
+
 'use client';
-// src/components/auth/AuthProvider.tsx
-// Restores auth session on app load by fetching /me with stored token
+
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { accessToken, login, logout, setLoading } = useAuthStore();
+  const { accessToken, login, logout, ready } = useAuthStore();
   const initialized = useRef(false);
 
   useEffect(() => {
-    if (initialized.current) return;
+    // Wait until the saved login information has loaded.
+    if (!ready || initialized.current) return;
+
     initialized.current = true;
 
     async function restoreSession() {
-      setLoading(true);
       try {
         if (accessToken) {
-          // Verify the stored token is still valid
+          // Verify the stored token is still valid.
           const { data } = await api.get('/auth/me');
+
           if (data.success) {
             login(data.data, accessToken);
           } else {
             logout();
           }
         } else {
-          // Try refreshing with httpOnly cookie
+          // Try refreshing the session using the httpOnly cookie.
           const { data } = await api.post('/auth/refresh');
-          if (data.success) {
-            // Fetch user profile with new access token
+
+          if (data.success && data.data?.accessToken) {
+            const newToken = data.data.accessToken;
+
+            // Fetch the user profile using the new access token.
             const meRes = await api.get('/auth/me');
+
             if (meRes.data.success) {
-              login(meRes.data.data, data.data.accessToken);
+              login(meRes.data.data, newToken);
+            } else {
+              logout();
             }
+          } else {
+            logout();
           }
         }
       } catch {
-        // No valid session — clear state silently
+        // No valid session: clear authentication state.
         logout();
-      } finally {
-        setLoading(false);
       }
     }
 
     restoreSession();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <>{children}</>;
 }

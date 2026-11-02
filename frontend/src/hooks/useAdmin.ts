@@ -2,7 +2,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { api, getApiError } from '@/lib/api';
-import { AdminStats, Post, User } from '@/types';
+import { AdminStats, Post, AdminUser } from '@/types';
 import toast from 'react-hot-toast';
 
 export function useAdminStats() {
@@ -57,7 +57,7 @@ export function useAdminPosts(status?: string) {
 }
 
 export function useAdminUsers() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export function useAdminUsers() {
     try {
       const { data } = await api.patch(`/admin/users/${userId}/status`, { status: newStatus });
       if (data.success) {
-        setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, status: newStatus as User['status'] } : u));
+        setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, status: newStatus } : u));
         toast.success(newStatus === 'BANNED' ? 'User banned' : 'User unbanned');
       }
     } catch (err) { toast.error(getApiError(err)); }

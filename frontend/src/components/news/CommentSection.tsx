@@ -85,7 +85,7 @@ export function CommentSection({ comments, onSubmit, onAuthRequired }: Props) {
         <EmptyState
           icon="💬"
           title="No comments yet"
-          description="Be the first to share your thoughts on this story."
+          message="Be the first to share your thoughts on this story."
         />
       ) : (
         <div className="space-y-0 divide-y divide-[#e2dfd8]">
